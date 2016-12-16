@@ -26,7 +26,9 @@ int main() {
 
     //ImageProcessing::lighten(p[0],-100);
     //ImageProcessing::contrast(p[0],0.1);
-    ImageProcessing::median_filter(p[0],6,8);
+
+    std::cout << "Computing medians..." << endl;
+    ImageProcessing::median_filter(p[0],3,8);
 
 
     p.showImage(0);

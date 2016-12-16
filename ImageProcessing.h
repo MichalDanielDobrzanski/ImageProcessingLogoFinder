@@ -18,7 +18,7 @@ public:
     static void contrast(Mat& mat, float mult);
 
     /* median filtering
-     * - specify the width and height of a window by 'w_size' value
+     * - specify the width and height of a window by 'w_size' value (only odd values!)
      * - pick value from median vector at 'idx'
      */
     static void median_filter(Mat& mat, int w_size, int idx);

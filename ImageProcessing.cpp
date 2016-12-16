@@ -152,3 +152,18 @@ void ImageProcessing::median_filter(Mat &mat, int w_size, int idx) {
         }
     }
 }
+
+
+void ImageProcessing::binary(cv::Mat& mat, int threshold){
+    for (int i = 1; i < mat.rows - 1; ++i)
+        for (int j = 1; j < mat.cols - 1; ++j){
+            Vec3b& vec = mat.at<Vec3b>(i, j);
+            int I = (vec[0] + vec[1] + vec[2]) / 3;
+            if (I > threshold) {
+                vec[0] = vec[1] = vec[2] = 255;
+            }
+            else {
+                vec[0] = vec[1] = vec[2] = 0;
+            }
+        }
+}

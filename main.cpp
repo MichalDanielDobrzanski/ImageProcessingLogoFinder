@@ -30,6 +30,10 @@ int main() {
     std::cout << "Computing medians..." << endl;
     ImageProcessing::median_filter(p[0],3,8);
 
+    //ImageProcessing::binary(p[0],100);
+
+
+
 
     p.showImage(0);
 

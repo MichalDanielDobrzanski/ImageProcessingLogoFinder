@@ -5,7 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(OpenCV REQUIRED)
 
-set(SOURCE_FILES main.cpp processing.h processing.cpp Image.h)
+set(SOURCE_FILES main.cpp Processing.h Processing.cpp Image.h ImageProcessing.cpp ImageProcessing.h)
 
 add_executable(open_cv ${SOURCE_FILES})
 

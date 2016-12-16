@@ -11,6 +11,16 @@ class ImageProcessing {
 
 public:
 
+    // add constant value to all of the pixels
     static void lighten(Mat& mat, int amount);
+
+    // change contrast:
+    static void contrast(Mat& mat, float mult);
+
+    /* median filtering
+     * - specify the width and height of a window by 'w_size' value
+     * - pick value from median vector at 'idx'
+     */
+    static void median_filter(Mat& mat, int w_size, int idx);
 
 };

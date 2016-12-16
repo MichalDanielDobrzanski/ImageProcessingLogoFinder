@@ -8,7 +8,8 @@ Processing::Processing(const string input_dir) {
 }
 
 void Processing::readImage(string img_name) {
-    Mat m = imread(input_dir + "/" + img_name);
+    Mat m = Mat();
+    input_dir.size() == 0 ? m = imread(img_name) : m = imread(input_dir + "/" + img_name);
     image_count++;
     images.push_back(new Image(img_name,image_count,m));
 }

@@ -95,7 +95,7 @@ void ImageProcessing::median_filter(Mat &mat, int w_size, int idx) {
         switch (mat.channels()) {
             case 3:
                 Mat_<Vec3b> mat3 = mat;
-                Mat_<Vec3b> mat3res = Mat(mat.cols,mat.rows,CV_8UC3);
+                Mat_<Vec3b> mat3res = Mat(mat.rows,mat.cols,CV_8UC3);
 
                 int offset = w_size / 2;
 
@@ -150,6 +150,8 @@ void ImageProcessing::median_filter(Mat &mat, int w_size, int idx) {
                 mat = mat3res;
                 break;
         }
+    } else {
+        throw 1;
     }
 }
 

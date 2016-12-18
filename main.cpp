@@ -18,7 +18,7 @@ int main() {
     */
 
     Processing p("");
-    p.readImage("Lena.png");
+    p.readImage("input_data/1.jpg");
 
     //p.showImage(3);
 

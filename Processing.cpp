@@ -2,10 +2,22 @@
 
 int Processing::image_count = 0;
 
+Processing::Processing(void) {
+    this->input_dir = "";
+    this->images = vector<Image*>();
+}
+
 Processing::Processing(const string input_dir) {
     this->input_dir = input_dir;
     this->images = vector<Image*>();
 }
+
+Processing::~Processing() {
+    for (int i = 0; i < images.size(); ++i) {
+        delete(images.back());
+    }
+}
+
 
 void Processing::readImage(string img_name) {
     Mat m = Mat();
@@ -20,9 +32,4 @@ void Processing::showImage(int i) {
     waitKey(-1);
 }
 
-Processing::~Processing() {
-    for (int i = 0; i < images.size(); ++i) {
-        delete(images.back());
-    }
 
-}

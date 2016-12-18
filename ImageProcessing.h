@@ -10,6 +10,10 @@ using namespace cv;
 class ImageProcessing {
 
 public:
+    const static int IMAGE_SIZE = 1000;
+
+    // resize
+    static void resize(Mat& mat);
 
     // add constant value to all pixels
     static void lighten(Mat& mat, int amount);
@@ -23,6 +27,11 @@ public:
      */
     static void median_filter(Mat& mat, int w_size, int idx);
 
-    // binarization over speficic threshold
+    static vector<Mat> split_to_hsv(Mat& mat);
+
+    // binarization over specific threshold
     static void binary(Mat &mat, int threshold);
+
+    // utilities
+    static void info(Mat& mat);
 };

@@ -22,6 +22,8 @@ public:
 
     static int image_count;
 
+    Processing();
+
     Processing(const string input_dir);
     virtual ~Processing();
 

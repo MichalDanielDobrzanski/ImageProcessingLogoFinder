@@ -1,7 +1,6 @@
 #include "ImageProcessing.h"
 
 void ImageProcessing::lighten(Mat &mat, int amount) {
-    CV_Assert(mat.depth() != sizeof(uchar));
     switch (mat.channels())  {
         case 1:
             for (int i = 0; i < mat.rows; ++i)
@@ -87,11 +86,11 @@ struct vals {
 bool sorting(vals i, vals j) { return (i.mean<j.mean); }
 
 
-void ImageProcessing::median_filter(Mat &mat, int w_size, int idx) {
+void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
     if (w_size > 1 && w_size < mat.cols && w_size < mat.rows &&
             idx > 0 && idx < w_size * w_size) {
-
-        CV_Assert(mat.depth() != sizeof(uchar));
+        std::cout << "Applying median filter " << w_size << " x " << w_size
+                  << " with idx = " << idx<< std::endl;
         switch (mat.channels()) {
             case 3:
                 Mat_<Vec3b> mat3 = mat;
@@ -156,7 +155,7 @@ void ImageProcessing::median_filter(Mat &mat, int w_size, int idx) {
 }
 
 
-void ImageProcessing::binary(cv::Mat& mat, int threshold){
+void ImageProcessing::binary(Mat& mat, int threshold){
     for (int i = 1; i < mat.rows - 1; ++i)
         for (int j = 1; j < mat.cols - 1; ++j){
             Vec3b& vec = mat.at<Vec3b>(i, j);
@@ -168,4 +167,39 @@ void ImageProcessing::binary(cv::Mat& mat, int threshold){
                 vec[0] = vec[1] = vec[2] = 0;
             }
         }
+}
+
+vector<Mat> ImageProcessing::split_to_hsv(Mat& mat) {
+    vector<Mat> channels;
+    split(mat,channels);
+    return channels;
+}
+
+void ImageProcessing::resize(Mat &mat) {
+    Size s;
+    if (mat.rows > IMAGE_SIZE || mat.cols > IMAGE_SIZE) {
+        if (mat.rows > IMAGE_SIZE) {
+            s.width = IMAGE_SIZE;
+            std::cout << "Changing width from " << mat.rows << " to " << IMAGE_SIZE << ".\n";
+        }
+        if (mat.cols > IMAGE_SIZE) {
+            s.height = IMAGE_SIZE;
+            std::cout << "Changing height to " << mat.cols << " to " << IMAGE_SIZE << ".\n";
+        }
+        cv::resize(mat, mat, s, 0, 0, CV_INTER_AREA);
+    }
+}
+
+void ImageProcessing::info(Mat &mat) {
+    std::cout << "Image: " << mat.rows << " x "
+              << mat.cols << ", channels: " << mat.channels();
+    unsigned long mean = 0;
+    for (int i = 0; i < mat.rows; ++i) {
+        for (int j = 0; j < mat.cols; ++j) {
+            mean += mat.at<uchar>(i,j);
+        }
+    }
+    mean /= mat.rows * mat.cols;
+    std::cout << ", mean pixel value: " << mean;
+    std::cout << std::endl;
 }

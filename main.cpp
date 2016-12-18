@@ -17,24 +17,25 @@ int main() {
     cout << "Images count: " << p.image_count << endl;
     */
 
-    Processing p("");
-    p.readImage("input_data/1.jpg");
+    Processing p;
+    p.readImage("input_data/4.jpg");
 
-    //p.showImage(3);
 
-    cout << "channels: " << p[0].channels() << endl;
+    ImageProcessing::info(p[0]);
+    ImageProcessing::resize(p[0]);
 
     //ImageProcessing::lighten(p[0],-100);
     //ImageProcessing::contrast(p[0],0.1);
 
-    std::cout << "Computing medians..." << endl;
     ImageProcessing::median_filter(p[0],3,8);
 
+    /*
+    vector<Mat> channels = ImageProcessing::split_to_hsv(p[0]);
+    string s1("channel[0] - H");
+    imshow(s1,channels[0]);
+    */
+
     //ImageProcessing::binary(p[0],100);
-
-
-
-
     p.showImage(0);
 
     return 0;

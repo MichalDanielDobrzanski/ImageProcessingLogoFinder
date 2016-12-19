@@ -23,7 +23,7 @@ int main() {
 
     ImageProcessing::info(p[0]);
     ImageProcessing::resize(p[0]);
-    ImageProcessing::filter(p[0],LP_GAUSS_1);
+    ImageProcessing::filter3(p[0],GAUSS);
 
     //ImageProcessing::lighten(p[0],-100);
     //ImageProcessing::contrast(p[0],0.1);
@@ -38,6 +38,8 @@ int main() {
 
     //ImageProcessing::binary(p[0],100);
     p.showImage(0);
+
+
 
     return 0;
 }

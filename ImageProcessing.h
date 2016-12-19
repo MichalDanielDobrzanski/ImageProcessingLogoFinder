@@ -4,18 +4,27 @@
 
 using namespace cv;
 
-static enum FilterTypes {
-    LP_GAUSS_1,
-    LP_GAUSS_2
+enum FilterTypes {
+    LOW_PASS,
+    GAUSS
 };
 
-static int lp_gauss_1[3][3] = {
+static const char* EnumFilters[] = {
+        "low-pass",
+        "3x3 gaussian"
+};
+
+static const char* getTextForEnum(int enumVal) {
+    return EnumFilters[enumVal];
+}
+
+static int filter_lp[3][3] = {
         {1, 1, 1},
         {1, 1, 1},
         {1, 1, 1}
 };
 
-static int lp_gauss_2[3][3] = {
+static int filter_gauss[3][3] = {
         {1, 2, 1},
         {2, 4, 2},
         {1, 2, 1}
@@ -48,12 +57,11 @@ public:
     static void median_filter(Mat& mat, int w_size, int idx);
 
     // 3x3 filtering; do not include edges
-    static void filter(Mat &mat, FilterTypes type);
+    static void filter3(Mat &mat, FilterTypes type);
 
     static vector<Mat> split_to_hs(Mat& mat);
 
     // binarization over specific threshold
     static void binary(Mat &mat, int threshold);
-
 
 };

@@ -16,26 +16,24 @@ void ImageProcessing::lighten(Mat &mat, int amount) {
                     }
                 }
             break;
-        case 3:
+        case 3: {
             Mat_<Vec3b> mat3 = mat;
             for (int i = 0; i < mat.rows; ++i)
-                for (int j = 0; j < mat.cols; ++j){
+                for (int j = 0; j < mat.cols; ++j) {
                     for (int k = 0; k < mat.channels(); ++k) {
                         if (mat3(i, j)[k] + amount > 255) {
                             mat3(i, j)[k] = 255;
-                        }
-                        else if (mat3(i, j)[k] + amount < 0){
+                        } else if (mat3(i, j)[k] + amount < 0) {
                             mat3(i, j)[k] = 0;
-                        }
-                        else {
+                        } else {
                             mat3(i, j)[k] += amount;
                         }
                     }
                 }
             break;
+        }
         default:
             throw 1;
-            break;
     }
 
 }
@@ -56,23 +54,22 @@ void ImageProcessing::contrast(Mat &mat, float mult) {
                     }
                 }
             break;
-        case 3:
+        case 3: {
             Mat_<Vec3b> mat3 = mat;
             for (int i = 0; i < mat.rows; ++i)
-                for (int j = 0; j < mat.cols; ++j){
+                for (int j = 0; j < mat.cols; ++j) {
                     for (int k = 0; k < mat.channels(); ++k) {
                         if (mat3(i, j)[k] * mult > 255) {
                             mat3(i, j)[k] = 255;
-                        }
-                        else if (mat3(i, j)[k] * mult < 0) {
+                        } else if (mat3(i, j)[k] * mult < 0) {
                             mat3(i, j)[k] = 0;
-                        }
-                        else {
+                        } else {
                             mat3(i, j)[k] *= mult;
                         }
                     }
                 }
             break;
+        }
         default:
             throw 1;
     }
@@ -95,9 +92,9 @@ void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
         std::cout << "Applying median filter " << w_size << " x " << w_size
                   << " with idx = " << idx<< std::endl;
         switch (mat.channels()) {
-            case 3:
+            case 3: {
                 Mat_<Vec3b> mat3 = mat;
-                Mat_<Vec3b> mat3res = Mat(mat.rows,mat.cols,CV_8UC3);
+                Mat_<Vec3b> mat3res = Mat(mat.rows, mat.cols, CV_8UC3);
 
                 int offset = w_size / 2;
 
@@ -116,7 +113,7 @@ void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
 
                                 // in order not to go out of the borders
                                 if ((c_row >= 0 && c_row < mat.rows) &&
-                                        (c_col >= 0  && c_col < mat.cols)) {
+                                    (c_col >= 0 && c_col < mat.cols)) {
 
                                     // mean:
                                     int pixVal = 0;
@@ -136,7 +133,7 @@ void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
 
                         // remove unused elements in a median vector
                         int unused = (int) (med.size() - el);
-                        for (int n = unused; n > 0 ; --n) {
+                        for (int n = unused; n > 0; --n) {
                             med.pop_back();
                         }
 
@@ -151,6 +148,7 @@ void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
                 }
                 mat = mat3res;
                 break;
+            }
             default:
                 throw 1;
         }
@@ -158,7 +156,6 @@ void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
         throw 1;
     }
 }
-
 
 void ImageProcessing::binary(Mat& mat, int threshold){
     switch (mat.channels()) {
@@ -191,7 +188,6 @@ void ImageProcessing::binary(Mat& mat, int threshold){
         default:
             throw 1;
     }
-
 }
 
 vector<Mat> ImageProcessing::split_to_hs(Mat& mat) {
@@ -230,29 +226,57 @@ void ImageProcessing::info(Mat &mat) {
 }
 
 // http://stackoverflow.com/questions/8767166/passing-a-2d-array-to-a-c-function
-template <size_t rows, size_t cols>
-int count_k(int (&filter)[rows][cols]) {
+int count_k(int (&filter)[3][3]) {
     int k = 0;
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols ++j) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; ++j) {
             k += filter[i][j];
         }
     }
     return k;
 }
 
-void ImageProcessing::filter(Mat &mat, FilterTypes type) {
+void filter3_image(Mat &mat, int k_sum, int (&filter)[3][3]) {
+    switch (mat.channels()) {
+        case 3: {
+            Mat_<Vec3b> mat3 = mat;
+            for (int i = 1; i < mat.rows - 1; ++i)
+                for (int j = 1; j < mat.cols - 1; ++j) {
+                    for (int k = 0; k < mat.channels(); ++k) {
+                        //mat3(i, j)[k]
+                        // apply mask for each channel:
+                        uchar nSum = 0;
+                        for (int l = 0; l < 3; ++l) {
+                            for (int m = 0; m < 3; ++m) {
+                                nSum += mat3(i - 1 + l, j - 1 + m)[k] * filter[l][m] * (float) 1 / k_sum;
+                            }
+                        }
+                        mat3(i, j)[k] = nSum;
+                    }
+                }
+            break;
+        }
+        default:
+            throw 1;
+    }
+}
+
+void ImageProcessing::filter3(Mat &mat, FilterTypes type) {
+    std::cout << "Filtering with " << getTextForEnum(type) << " filter..."<< std::endl;
     switch (type) {
-        case LP_GAUSS_1:
-            int k = count_k<3,3>(lp_gauss_1);
-
+        case LOW_PASS: {
+            int k = count_k(filter_lp);
+            filter3_image(mat, k, filter_lp);
             break;
-        case LP_GAUSS_2:
-            k = count_k<3,3>(lp_gauss_2);
-
+        }
+        case GAUSS: {
+            int k = count_k(filter_gauss);
+            filter3_image(mat, k, filter_gauss);
             break;
+        }
         default:
             throw 1;
     }
 
 }
+

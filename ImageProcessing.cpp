@@ -33,12 +33,14 @@ void ImageProcessing::lighten(Mat &mat, int amount) {
                     }
                 }
             break;
+        default:
+            throw 1;
+            break;
     }
 
 }
 
 void ImageProcessing::contrast(Mat &mat, float mult) {
-    CV_Assert(mat.depth() != sizeof(uchar));
     switch (mat.channels())  {
         case 1:
             for (int i = 0; i < mat.rows; ++i)
@@ -71,8 +73,9 @@ void ImageProcessing::contrast(Mat &mat, float mult) {
                     }
                 }
             break;
+        default:
+            throw 1;
     }
-
 }
 
 // utilities for median filtering
@@ -148,6 +151,8 @@ void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
                 }
                 mat = mat3res;
                 break;
+            default:
+                throw 1;
         }
     } else {
         throw 1;
@@ -156,20 +161,40 @@ void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
 
 
 void ImageProcessing::binary(Mat& mat, int threshold){
-    for (int i = 1; i < mat.rows - 1; ++i)
-        for (int j = 1; j < mat.cols - 1; ++j){
-            Vec3b& vec = mat.at<Vec3b>(i, j);
-            int I = (vec[0] + vec[1] + vec[2]) / 3;
-            if (I > threshold) {
-                vec[0] = vec[1] = vec[2] = 255;
+    switch (mat.channels()) {
+        case 1:
+            for (int i = 1; i < mat.rows - 1; ++i) {
+                for (int j = 1; j < mat.cols - 1; ++j) {
+                    Vec3b &vec = mat.at<Vec3b>(i, j);
+                    uchar I = mat.at<uchar>(i, j);
+                    if (I > threshold) {
+                        mat.at<uchar>(i, j) = 255;
+                    } else {
+                        mat.at<uchar>(i, j) = 0;
+                    }
+                }
             }
-            else {
-                vec[0] = vec[1] = vec[2] = 0;
+            break;
+        case 3:
+            for (int i = 1; i < mat.rows - 1; ++i) {
+                for (int j = 1; j < mat.cols - 1; ++j) {
+                    Vec3b &vec = mat.at<Vec3b>(i, j);
+                    int I = (vec[0] + vec[1] + vec[2]) / 3;
+                    if (I > threshold) {
+                        vec[0] = vec[1] = vec[2] = 255;
+                    } else {
+                        vec[0] = vec[1] = vec[2] = 0;
+                    }
+                }
             }
-        }
+            break;
+        default:
+            throw 1;
+    }
+
 }
 
-vector<Mat> ImageProcessing::split_to_hsv(Mat& mat) {
+vector<Mat> ImageProcessing::split_to_hs(Mat& mat) {
     vector<Mat> channels;
     split(mat,channels);
     return channels;
@@ -202,4 +227,32 @@ void ImageProcessing::info(Mat &mat) {
     mean /= mat.rows * mat.cols;
     std::cout << ", mean pixel value: " << mean;
     std::cout << std::endl;
+}
+
+// http://stackoverflow.com/questions/8767166/passing-a-2d-array-to-a-c-function
+template <size_t rows, size_t cols>
+int count_k(int (&filter)[rows][cols]) {
+    int k = 0;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols ++j) {
+            k += filter[i][j];
+        }
+    }
+    return k;
+}
+
+void ImageProcessing::filter(Mat &mat, FilterTypes type) {
+    switch (type) {
+        case LP_GAUSS_1:
+            int k = count_k<3,3>(lp_gauss_1);
+
+            break;
+        case LP_GAUSS_2:
+            k = count_k<3,3>(lp_gauss_2);
+
+            break;
+        default:
+            throw 1;
+    }
+
 }

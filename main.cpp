@@ -23,11 +23,12 @@ int main() {
 
     ImageProcessing::info(p[0]);
     ImageProcessing::resize(p[0]);
+    ImageProcessing::filter(p[0],LP_GAUSS_1);
 
     //ImageProcessing::lighten(p[0],-100);
     //ImageProcessing::contrast(p[0],0.1);
 
-    ImageProcessing::median_filter(p[0],3,8);
+    //ImageProcessing::median_filter(p[0],3,8);
 
     /*
     vector<Mat> channels = ImageProcessing::split_to_hsv(p[0]);

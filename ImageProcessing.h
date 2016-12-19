@@ -4,6 +4,23 @@
 
 using namespace cv;
 
+static enum FilterTypes {
+    LP_GAUSS_1,
+    LP_GAUSS_2
+};
+
+static int lp_gauss_1[3][3] = {
+        {1, 1, 1},
+        {1, 1, 1},
+        {1, 1, 1}
+};
+
+static int lp_gauss_2[3][3] = {
+        {1, 2, 1},
+        {2, 4, 2},
+        {1, 2, 1}
+};
+
 /*
  * A class for storing all processing operations for images
  */
@@ -14,6 +31,9 @@ public:
 
     // resize
     static void resize(Mat& mat);
+
+    // utilities
+    static void info(Mat& mat);
 
     // add constant value to all pixels
     static void lighten(Mat& mat, int amount);
@@ -27,11 +47,13 @@ public:
      */
     static void median_filter(Mat& mat, int w_size, int idx);
 
-    static vector<Mat> split_to_hsv(Mat& mat);
+    // 3x3 filtering; do not include edges
+    static void filter(Mat &mat, FilterTypes type);
+
+    static vector<Mat> split_to_hs(Mat& mat);
 
     // binarization over specific threshold
     static void binary(Mat &mat, int threshold);
 
-    // utilities
-    static void info(Mat& mat);
+
 };

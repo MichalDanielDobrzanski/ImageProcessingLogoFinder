@@ -18,13 +18,15 @@ int main() {
     */
 
     Processing p;
-    p.readImage("input_data/4.jpg");
+    p.readImage("input_data/2.jpg");
 
 
     ImageProcessing::info(p[0]);
-    ImageProcessing::resize(p[0]);
-    ImageProcessing::filter3(p[0],GAUSS);
-
+    //ImageProcessing::resize(p[0]);
+    //ImageProcessing::filter3(p[0],GAUSS);
+    Mat mat = ImageProcessing::split_to_hs(p[0]);
+    printf( "hue: %6.4lf\n", mat.at<Vec2f>(5,5)[0]);
+    printf( "sat: %6.4lf\n", mat.at<Vec2f>(5,5)[1]);
     //ImageProcessing::lighten(p[0],-100);
     //ImageProcessing::contrast(p[0],0.1);
 
@@ -37,7 +39,7 @@ int main() {
     */
 
     //ImageProcessing::binary(p[0],100);
-    p.showImage(0);
+    //p.showImage(0);
 
 
 

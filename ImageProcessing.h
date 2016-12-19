@@ -59,7 +59,7 @@ public:
     // 3x3 filtering; do not include edges
     static void filter3(Mat &mat, FilterTypes type);
 
-    static vector<Mat> split_to_hs(Mat& mat);
+    static Mat split_to_hs(Mat& mat);
 
     // binarization over specific threshold
     static void binary(Mat &mat, int threshold);

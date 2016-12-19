@@ -175,7 +175,7 @@ void ImageProcessing::binary(Mat& mat, int threshold){
         case 3:
             for (int i = 1; i < mat.rows - 1; ++i) {
                 for (int j = 1; j < mat.cols - 1; ++j) {
-                    Vec3b &vec = mat.at<Vec3b>(i, j);
+                    Vec3b& vec = mat.at<Vec3b>(i, j);
                     int I = (vec[0] + vec[1] + vec[2]) / 3;
                     if (I > threshold) {
                         vec[0] = vec[1] = vec[2] = 255;
@@ -190,10 +190,72 @@ void ImageProcessing::binary(Mat& mat, int threshold){
     }
 }
 
-vector<Mat> ImageProcessing::split_to_hs(Mat& mat) {
-    vector<Mat> channels;
-    split(mat,channels);
-    return channels;
+float smallest(float x, float y, float z){
+    return std::min({x, y, z});
+}
+
+float largest(float x, float y, float z){
+    return std::max({x, y, z});
+}
+
+int smallest(int x, int y, int z){
+    return std::min({x, y, z});
+}
+
+int largest(int x, int y, int z){
+    return std::max({x, y, z});
+}
+
+// https://www.cs.rit.edu/~ncs/color/t_convert.html
+Mat ImageProcessing::split_to_hs(Mat& mat) {
+    std::cout << "Splutting input RGB values into HS(without V)..." << std::endl;
+    Mat_<Vec3b> mat3 = mat;
+    Mat_<Vec2f> mat_hs = Mat(mat.rows, mat.cols, CV_32FC2);
+    // float matrix, two channels for H and S
+    switch (mat.channels()) {
+        case 3: {
+            for (int i = 0; i < mat.rows; ++i) {
+                for (int j = 0; j < mat.cols; ++j) {
+                    // change RGB to 0..1
+                    float R = (float) mat3(i, j)[0] / 255;
+                    float G = (float) mat3(i, j)[1] / 255;
+                    float B = (float) mat3(i, j)[2] / 255;
+                    //std::cout << R << " " << G << " " << B << "\n";
+
+                    float Cmax = largest(R, G, B);
+                    float Cmin = smallest(R, G, B);
+                    float delta = Cmax - Cmin;
+                    float hue = 0;
+                    if (Cmax == R) {
+                        hue = (G - B) / delta;
+                    } else if (Cmax == G) {
+                        hue = (B - R) / delta + 2;
+                    } else if (Cmax == B) {
+                        hue = (R - G) / delta + 4;
+                    }
+                    hue *= 60;
+                    if (hue < 0) {
+                        hue += 360;
+                    }
+
+                    float sat = 0;
+                    if (Cmax != 0) {
+                        sat = delta / Cmax;
+                    } else {
+                        sat = 0;
+                        hue = -1;
+                    }
+                    //std::cout << "H:" << hue << " S:" << sat << std::endl;
+
+                    mat_hs(i, j)[0] = hue;
+                    mat_hs(i, j)[1] = sat;
+                }
+            }
+            return mat_hs;
+        }
+        default:
+            throw 1;
+    }
 }
 
 void ImageProcessing::resize(Mat &mat) {

@@ -9,18 +9,61 @@ const string INPUT_DIR = "input_data";
 int main() {
 
 
-    Processing p(INPUT_DIR);
-    for (int i = 0; i < 4; ++i) {
-        p.read_image(to_string(i + 1) + ".jpg");
-        ImageProcessing::info(p[i]);
-        ImageProcessing::resize(p[i]);
-        Mat mat = ImageProcessing::split_to_hs(p[i]);
-        //printf( "hue: %6.4lf\n", mat.at<Vec2f>(5,5)[0]);
-        //printf( "sat: %6.4lf\n", mat.at<Vec2f>(5,5)[1]);
-        ImageProcessing::segment(mat,p[i],0.5,0.7,0.5,1);
-        imshow(to_string(i),p[i]);
+    //Processing p(INPUT_DIR);
+    for (int i = 1; i < 5; ++i) {
+        Mat mat = imread(INPUT_DIR + "/" + to_string(i) + ".jpg");
+
+        ImageProcessing::info(mat);
+
+        ImageProcessing::resize(mat);
+
+        // using LP filters in inefficient - edges are blurry
+        //ImageProcessing::filter3(mat,LOW_PASS);
+
+        Mat hs_mat = ImageProcessing::split_to_hs(mat);
+
+        // segmentation - best parameters so far: 0.55, 0.73, 0.49, 1
+        ImageProcessing::segment(hs_mat,mat,0.55,0.73,0.49,1);
+
+        ImageProcessing::median_filter(mat,3,5);
+
+        // erosion is not effective as it blurs the text..
+        //ImageProcessing::erosion(mat);
+
+        // dilation blurs also
+        //ImageProcessing::dilation(mat);
+
+        // opening - box.
+        //ImageProcessing::erosion_dilation(mat,true,true);
+        //ImageProcessing::erosion_dilation(mat,false,true);
+        //imwrite("out_data/" + to_string(i) + "_3box_opening " + ".jpg",mat),
+
+        // opening - plus
+        //ImageProcessing::erosion_dilation(mat,true,false);
+        //ImageProcessing::erosion_dilation(mat,false,false);
+        //imwrite("out_data/" + to_string(i) + "_plus_opening " + ".jpg",mat),
+
+        // closure (dilation -> erosion) - box:
+        //ImageProcessing::erosion_dilation(mat,false,true);
+        //ImageProcessing::erosion_dilation(mat,true,true);
+        //imwrite("out_data/" + to_string(i) + "_3box_closure" + ".jpg",mat),
+
+        // The best so far:
+        // closure (dilation -> erosion) - plus:
+        ImageProcessing::erosion_dilation(mat,false,false);
+        ImageProcessing::erosion_dilation(mat,true,false);
+        //imwrite("out_data/" + to_string(i) + "_plus_closure" + ".jpg",mat),
+
+
+        //imshow(to_string(i),mat);
+
+        cout << endl;
     }
-    cout << "Images count: " << p.image_count << endl;
+
+    waitKey(-1);
+
+    //printf( "hue: %6.4lf\n", mat.at<Vec2f>(5,5)[0]);
+    //printf( "sat: %6.4lf\n", mat.at<Vec2f>(5,5)[1]);
 
 
 //    int img = 1;
@@ -52,6 +95,6 @@ int main() {
     //ImageProcessing::binary(p[0],100);
 
 
-    waitKey(-1);
+
     return 0;
 }

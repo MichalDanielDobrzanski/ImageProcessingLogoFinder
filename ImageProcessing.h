@@ -35,6 +35,11 @@ static int filter_gauss[3][3] = {
  */
 class ImageProcessing {
 
+private:
+    // 3box true = 3x3 box
+    // 3box false = 'plus' sign box
+    static void check_local(Mat_<Vec3f>& mat, Mat_<Vec3f>& out_mat, int i, int j, bool eros, bool box);
+
 public:
     const static int IMAGE_SIZE = 1000;
     const static int HUE_MAX = 360;
@@ -70,7 +75,10 @@ public:
 
     static void show_histogram(Mat &mat);
 
+    // this is binary AND of HUE and SAT. If hue and sat are in their ranges, then calc it as image.
     static void segment(Mat hs_mat, Mat& rgb_mat, double h_min, double h_max, double s_min, double s_max);
 
-    static void segment_2(Mat hs_mat, Mat& rgb_mat, double h_min, double h_max, double s_min, double s_max);
+    // erosion. 3x3 box.
+    static void erosion_dilation(Mat& mat, bool eros, bool box);
+
 };

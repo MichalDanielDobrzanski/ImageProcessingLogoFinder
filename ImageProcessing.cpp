@@ -295,6 +295,8 @@ int count_k(int (&filter)[3][3]) {
             k += filter[i][j];
         }
     }
+    if (k == 0)
+        k = 1;
     return k;
 }
 
@@ -382,5 +384,68 @@ void ImageProcessing::segment(Mat hs_mat, Mat& rgb_mat, double h_min, double h_m
         }
     }
     rgb_mat = mat_rgb;
+}
+
+void ImageProcessing::check_local(Mat_<Vec3f>& mat, Mat_<Vec3f>& out_mat, int i, int j, bool eros, bool box) {
+    if (box) {
+        int box_size = 3;
+        for (int k = 0; k < box_size; ++k) {
+            for (int l = 0; l < box_size; ++l) {
+                if (eros) {
+                    if (mat(i - 1 + k, j - 1 + k)[0] == BG && k != 1 && l != 1) {
+                        out_mat(i, j)[0] = out_mat(i, j)[1] = out_mat(i, j)[2] = BG;
+                        return;
+                    } else {
+                        out_mat(i, j)[0] = out_mat(i, j)[1] = out_mat(i, j)[2] = OBJ;
+                    }
+                } else {
+                    if (mat(i - 1 + k, j - 1 + k)[0] == OBJ && k != 1 && l != 1) {
+                        out_mat(i, j)[0] = out_mat(i, j)[1] = out_mat(i, j)[2] = OBJ;
+                        return;
+                    } else {
+                        out_mat(i, j)[0] = out_mat(i, j)[1] = out_mat(i, j)[2] = BG;
+                    }
+                }
+            }
+        }
+    } else {
+        // 'plus' sign
+        if (eros) {
+            if (mat(i , j - 1)[0] == BG || mat(i , j + 1)[0] == BG ||
+                    mat(i - 1 , j)[0] == BG ||  mat(i + 1 , j)[0] == BG) {
+                out_mat(i, j)[0] = out_mat(i, j)[1] = out_mat(i, j)[2] = BG;
+            } else {
+                out_mat(i, j)[0] = out_mat(i, j)[1] = out_mat(i, j)[2] = OBJ;
+            }
+        } else {
+            if (mat(i , j - 1)[0] == OBJ || mat(i , j + 1)[0] == OBJ ||
+                mat(i - 1 , j)[0] == OBJ ||  mat(i + 1 , j)[0] == OBJ) {
+                out_mat(i, j)[0] = out_mat(i, j)[1] = out_mat(i, j)[2] = OBJ;
+            } else {
+                out_mat(i, j)[0] = out_mat(i, j)[1] = out_mat(i, j)[2] = BG;
+            }
+        }
+    }
+}
+
+void ImageProcessing::erosion_dilation(Mat& mat, bool eros, bool box) {
+    if (eros)
+        std::cout << "Applying erosion. ";
+    else
+        std::cout << "Applying dilation. ";
+    if (box)
+        std::cout << "Box 3x3";
+    else
+        std::cout << "Plus sign";
+    std::cout << "...\n";
+
+    Mat_<Vec3f> mat_bin = mat;
+    Mat_<Vec3f> out_mat_bin = Mat(mat.rows,mat.cols,CV_8UC3);
+    for (int i = 1; i < mat.rows - 1; ++i) {
+        for (int j = 1; j < mat.cols - 1; ++j) {
+            check_local(mat_bin,out_mat_bin,i,j,eros,box);
+        }
+    }
+    mat = out_mat_bin;
 }
 

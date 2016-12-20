@@ -13,50 +13,61 @@ int main() {
     for (int i = 1; i < 5; ++i) {
         Mat mat = imread(INPUT_DIR + "/" + to_string(i) + ".jpg");
 
+        // get standard information aobut an image...
         ImageProcessing::info(mat);
 
+        // resize image if larger than 1000 x 1000
         ImageProcessing::resize(mat);
 
-        // using LP filters in inefficient - edges are blurry
+        // using LP filters in inefficient - edges become blurry
         //ImageProcessing::filter3(mat,LOW_PASS);
 
+        // convert RGB to Hue and Saturation channel
         Mat hs_mat = ImageProcessing::split_to_hs(mat);
+        vector<Mat> channels;
+        split(hs_mat, channels);
+        imwrite("out_data/hs/" + to_string(i) + "_split_to_hs_hue" + ".jpg",channels[0]),
+        imwrite("out_data/hs/" + to_string(i) + "_split_to_hs_sat" + ".jpg",channels[1]),
 
-        // segmentation - best parameters so far: 0.55, 0.73, 0.49, 1
+        // segmentation of red color by adjusting min and max thresholds for Hue and Saturation.
+        // Best parameters so far: 0.55, 0.73, 0.49, 1
         ImageProcessing::segment(hs_mat,mat,0.55,0.73,0.49,1);
+        //imwrite("out_data/segmentation/" + to_string(i) + "_segment_0_55_0_73_0_49_1_0" + ".jpg",mat),
 
+        // median filtering to reduce noise
         ImageProcessing::median_filter(mat,3,5);
+        //imwrite("out_data/median/" + to_string(i) + "_median_3_5" + ".jpg",mat),
 
-        // erosion is not effective as it blurs the text..
+        // single erosion is not effective as it blurs the text..
         //ImageProcessing::erosion(mat);
 
-        // dilation blurs also
+        // single dilation blurs also
         //ImageProcessing::dilation(mat);
 
         // opening - box.
         //ImageProcessing::erosion_dilation(mat,true,true);
         //ImageProcessing::erosion_dilation(mat,false,true);
-        //imwrite("out_data/" + to_string(i) + "_3box_opening " + ".jpg",mat),
+        //imwrite("out_data/open_closure" + to_string(i) + "_3box_opening " + ".jpg",mat),
 
         // opening - plus
         //ImageProcessing::erosion_dilation(mat,true,false);
         //ImageProcessing::erosion_dilation(mat,false,false);
-        //imwrite("out_data/" + to_string(i) + "_plus_opening " + ".jpg",mat),
+        //imwrite("out_data/open_closure" + to_string(i) + "_plus_opening " + ".jpg",mat),
 
         // closure (dilation -> erosion) - box:
         //ImageProcessing::erosion_dilation(mat,false,true);
         //ImageProcessing::erosion_dilation(mat,true,true);
-        //imwrite("out_data/" + to_string(i) + "_3box_closure" + ".jpg",mat),
+        //imwrite("out_data/open_closure" + to_string(i) + "_3box_closure" + ".jpg",mat),
 
-        // The best so far:
+        // The best one so far:
         // closure (dilation -> erosion) - plus:
         ImageProcessing::erosion_dilation(mat,false,false);
         ImageProcessing::erosion_dilation(mat,true,false);
-        //imwrite("out_data/" + to_string(i) + "_plus_closure" + ".jpg",mat),
+        //imwrite("out_data/open_closure" + to_string(i) + "_plus_closure" + ".jpg",mat),
 
 
-        //imshow(to_string(i),mat);
 
+        imshow(to_string(i),mat);
         cout << endl;
     }
 

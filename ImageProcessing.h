@@ -37,6 +37,10 @@ class ImageProcessing {
 
 public:
     const static int IMAGE_SIZE = 1000;
+    const static int HUE_MAX = 360;
+
+    const static int OBJ = 255;
+    const static int BG = 0;
 
     // resize
     static void resize(Mat& mat);
@@ -64,4 +68,9 @@ public:
     // binarization over specific threshold
     static void binary(Mat &mat, int threshold);
 
+    static void show_histogram(Mat &mat);
+
+    static void segment(Mat hs_mat, Mat& rgb_mat, double h_min, double h_max, double s_min, double s_max);
+
+    static void segment_2(Mat hs_mat, Mat& rgb_mat, double h_min, double h_max, double s_min, double s_max);
 };

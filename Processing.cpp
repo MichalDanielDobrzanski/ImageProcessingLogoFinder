@@ -19,17 +19,12 @@ Processing::~Processing() {
 }
 
 
-void Processing::readImage(string img_name) {
+void Processing::read_image(string img_name) {
     Mat m = Mat();
     input_dir.size() == 0 ? m = imread(img_name) : m = imread(input_dir + "/" + img_name);
     image_count++;
     images.push_back(new Image(img_name,image_count,m));
 }
 
-void Processing::showImage(int i) {
-    Image* img = images.at((unsigned long)i);
-    imshow(img->name, img->mat);
-    waitKey(-1);
-}
 
 

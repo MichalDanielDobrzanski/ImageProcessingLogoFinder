@@ -208,7 +208,7 @@ int largest(int x, int y, int z){
 
 // https://www.cs.rit.edu/~ncs/color/t_convert.html
 Mat ImageProcessing::split_to_hs(Mat& mat) {
-    std::cout << "Splutting input RGB values into HS(without V)..." << std::endl;
+    std::cout << "Splitting input RGB values into HS(without V)..." << std::endl;
     Mat_<Vec3b> mat3 = mat;
     Mat_<Vec2f> mat_hs = Mat(mat.rows, mat.cols, CV_32FC2);
     // float matrix, two channels for H and S
@@ -340,5 +340,47 @@ void ImageProcessing::filter3(Mat &mat, FilterTypes type) {
             throw 1;
     }
 
+}
+
+void ImageProcessing::show_histogram(Mat& mat) {
+    Mat m1;
+    m1 = Mat::zeros(360,255, CV_8UC3);
+    for (int i = 0; i < mat.rows; ++i) {
+        for (int j = 0; j < mat.cols; ++j) {
+            float hue = mat.at<Vec2f>(i,j)[0];
+            float sat = mat.at<Vec2f>(i,j)[1];
+            uchar i_hue = (uchar)hue;
+            uchar i_sat = (uchar)(sat * 255);
+            m1.at<Vec2b>(i_sat ,i_hue)[0] = 255;
+            m1.at<Vec2b>(i_sat, i_hue)[1] = 255;
+            m1.at<Vec2b>(i_sat ,i_hue)[2] = 255;
+        }
+        //std::cout << "here2 " << std::endl;
+    }
+    std::cout << "here2 " << std::endl;
+    //std::cout << "here: " << (int)m1.at<Vec2b>(0,0)[0];
+    imshow( "H-S Histogram", m1);
+    waitKey(-1);
+}
+
+void ImageProcessing::segment(Mat hs_mat, Mat& rgb_mat, double h_min, double h_max, double s_min, double s_max) {
+    std::cout << "Segmenting HS image with " << h_min << " < HUE < " << h_max << ", " <<
+            s_min << " < SAT < " << s_max << std::endl;
+    Mat_<Vec2f> mat_hs = hs_mat;
+    Mat_<Vec3f> mat_rgb = rgb_mat;
+    for (int i = 0; i < mat_hs.rows; ++i) {
+        for (int j = 0; j < mat_hs.cols; ++j) {
+            double hue_val = (double)mat_hs(i, j)[0];
+            double sat_val = (double)mat_hs(i, j)[1];
+            if ((h_min * HUE_MAX < hue_val && hue_val < h_max * HUE_MAX) &&
+                    (s_min < sat_val && sat_val < s_max)) {
+                // ok
+                mat_rgb(i,j)[0] = mat_rgb(i,j)[1] = mat_rgb(i,j)[2] = OBJ;
+            } else {
+                mat_rgb(i,j)[0] = mat_rgb(i,j)[1] = mat_rgb(i,j)[2] = BG;
+            }
+        }
+    }
+    rgb_mat = mat_rgb;
 }
 

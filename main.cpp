@@ -24,10 +24,10 @@ int main() {
 
         // convert RGB to Hue and Saturation channel
         Mat hs_mat = ImageProcessing::split_to_hs(mat);
-        vector<Mat> channels;
-        split(hs_mat, channels);
-        imwrite("out_data/hs/" + to_string(i) + "_split_to_hs_hue" + ".jpg",channels[0]),
-        imwrite("out_data/hs/" + to_string(i) + "_split_to_hs_sat" + ".jpg",channels[1]),
+//        vector<Mat> channels;
+//        split(hs_mat, channels);
+//        imwrite("out_data/hs/" + to_string(i) + "_split_to_hs_hue" + ".jpg",channels[0]),
+//        imwrite("out_data/hs/" + to_string(i) + "_split_to_hs_sat" + ".jpg",channels[1]),
 
         // segmentation of red color by adjusting min and max thresholds for Hue and Saturation.
         // Best parameters so far: 0.55, 0.73, 0.49, 1
@@ -66,11 +66,19 @@ int main() {
         //imwrite("out_data/open_closure" + to_string(i) + "_plus_closure" + ".jpg",mat),
 
 
+        // get sorted list of objects in a picture
+        int minS = 20; // minimal field
+        vector<Bbox> els = ImageProcessing::get_elements(mat, minS,false);
+        //int idx = 1;
+        //imwrite("out_data/segmented/" + to_string(i) + "_segm_" + to_string(els[idx].S)
+        //        + "_idx_"+ to_string(idx) + ".jpg",els[idx].box),
 
-        imshow(to_string(i),mat);
+        //waitKey(-1);
+
+        //imshow(to_string(i),mat);
+        els.clear();
         cout << endl;
     }
-
     waitKey(-1);
 
     //printf( "hue: %6.4lf\n", mat.at<Vec2f>(5,5)[0]);

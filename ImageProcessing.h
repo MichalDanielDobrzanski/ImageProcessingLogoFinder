@@ -30,6 +30,15 @@ static int filter_gauss[3][3] = {
         {1, 2, 1}
 };
 
+struct Bbox {
+    Mat box;
+    int S;
+    int x_min;
+    int x_max;
+    int y_min;
+    int y_max;
+};
+
 /*
  * A class for storing all processing operations for images
  */
@@ -78,7 +87,11 @@ public:
     // this is binary AND of HUE and SAT. If hue and sat are in their ranges, then calc it as image.
     static void segment(Mat hs_mat, Mat& rgb_mat, double h_min, double h_max, double s_min, double s_max);
 
-    // erosion. 3x3 box.
+    // erosion and dilation. 3x3 box or plus sign.
     static void erosion_dilation(Mat& mat, bool eros, bool box);
 
+    // get white elements
+    static vector<Bbox> get_elements(Mat& mat, int i, bool show_first);
+
+    static void flood_fill(Mat_<Vec3f> &mat, Mat_<uchar> &ch, int i, int j, Bbox &b_curr);
 };

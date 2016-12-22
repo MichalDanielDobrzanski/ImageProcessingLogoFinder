@@ -449,3 +449,83 @@ void ImageProcessing::erosion_dilation(Mat& mat, bool eros, bool box) {
     mat = out_mat_bin;
 }
 
+void ImageProcessing::flood_fill(Mat_<Vec3f>& mat, Mat_<uchar>& ch, int i, int j, Bbox& b_curr) {
+    for (int k = 0; k < 3; ++k) {
+        for (int l = 0; l < 3; ++l) {
+            int row = i - 1 + k;
+            int col = j - 1 + l;
+            if (row >= 0 && col >= 0 && row < mat.rows && col < mat.cols && (k != 1 && j != 1)) {
+                if (ch(row,col) == 0) {
+                    ch(row,col) = 255; // mark as checked
+                    b_curr.S++;
+
+                    if (b_curr.y_min > row) {
+                        b_curr.y_min = row;
+                    }
+                    if (b_curr.y_max < row) {
+                        b_curr.y_max = row;
+                    }
+                    if (b_curr.x_min > col) {
+                        b_curr.x_min = col;
+                    }
+                    if (b_curr.x_max < col) {
+                        b_curr.x_max = col;
+                    }
+                    //std::cout << "going to: " << row << ", " << col << std::endl;
+                    flood_fill(mat, ch, row, col, b_curr);
+                }
+            }
+        }
+    }
+}
+
+bool comp(Bbox left, Bbox right) {
+    return left.S > right.S;
+}
+
+vector<Bbox> ImageProcessing::get_elements(Mat& mat, int S_min, bool show_first) {
+    vector<Bbox> els;
+    Mat_<Vec3f> v_mat = mat;
+    Mat_<uchar> ch = Mat(mat.rows,mat.cols,CV_8UC1);
+    for (int i = 0; i < mat.rows; ++i) {
+        for (int j = 0; j < mat.cols; ++j) {
+            if ((int)v_mat(i,j)[0] == BG)
+                ch(i,j) = 255;
+        }
+    }
+
+    for (int i = 0; i < mat.rows; ++i) {
+        for (int j = 0; j < mat.cols; ++j) {
+            if (ch(i,j) == 0) {
+                ch(i,j) = 255;
+                Bbox b_curr;
+                b_curr.S = 1;
+                b_curr.x_max = b_curr.y_max = 0;
+                b_curr.y_min = b_curr.x_min = mat.rows * mat.cols;
+                //std::cout << "going in: " << i << ", " << j << std::endl;
+                flood_fill(v_mat,ch,i,j,b_curr);
+
+                int width = b_curr.x_max -  b_curr.x_min;
+                int height =  b_curr.y_max -  b_curr.y_min;
+                if (b_curr.S >= S_min && width > 0 && height > 0) {
+                    b_curr.box = mat(Rect(b_curr.x_min,b_curr.y_min,width,height));
+                    //std::cout << "adding: " << b_curr.S << std::endl;
+                    els.push_back(b_curr);
+                }
+            }
+        }
+    }
+    std::sort(els.begin(),els.end(),comp);
+
+    if (els.size() > 0) {
+        std::cout << "Max area: " << els[0].S << ", Items count: " << els.size();
+        std::cout << ", Largest element: x_min=" << els[0].x_min << ", y_min=" << els[0].y_min << ", x_max="
+                  << els[0].x_max << ", y_max=" << els[0].y_max << "."
+                  << std::endl;
+        if (show_first) {
+            imshow("largest segment:" + std::to_string(els[0].S),els[0].box);
+        }
+    }
+    //imshow("bbox",els[1].box);
+    return els;
+}

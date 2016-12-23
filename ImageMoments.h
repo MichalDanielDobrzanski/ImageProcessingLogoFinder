@@ -48,10 +48,10 @@ public:
 
     ImageMoments(Mat& mat);
 
+    ImageMoments(string logo_path);
+
     // gets "M" moment (M1, M3, M7,...)
     double get_moment(int mom);
-
-    void get_logo_moment(string path);
 
     double get_classification(double x1, double y1, double z1, double x2, double y2, double z2);
 };

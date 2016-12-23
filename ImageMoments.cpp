@@ -7,6 +7,15 @@ ImageMoments::ImageMoments(Mat& mat) {
     calc_moments(mat);
 }
 
+ImageMoments::ImageMoments(string logo_path) {
+    string ext = ".png";
+    Mat mat = imread(logo_path + ext);
+    //imshow("mom",mat);
+    //waitKey(-1);
+    reset_moments();
+    calc_moments(mat);
+}
+
 double ImageMoments::get_moment(int number) {
     double mom;
     switch (number) {
@@ -99,23 +108,23 @@ void ImageMoments::reset_moments() {
     m0100 = 0.;
 }
 
-void ImageMoments::get_logo_moment(string logo_path) {
-    // calc moments for logo (split into emblem and text)
-    string ext = ".png";
-
-    Mat mat = imread(logo_path + ext);
-
-    // rotate, scale, move to get average moments
-    reset_moments();
-    calc_moments(mat);
-    //std::cout << "mom1=" << get_moment(1) << std::endl;
-    //std::cout << "mom3=" << get_moment(3) << std::endl;
-    //std::cout << "mom7=" << get_moment(7) << std::endl;
-}
+//void ImageMoments::get_logo_moment(string logo_path) {
+//    // calc moments for logo (split into emblem and text)
+//    string ext = ".png";
+//    Mat mat = imread(logo_path + ext);
+//
+//    // rotate, scale, move to get average moments
+//    reset_moments();
+//    calc_moments(mat);
+//    //std::cout << "mom1=" << get_moment(1) << std::endl;
+//    //std::cout << "mom3=" << get_moment(3) << std::endl;
+//    //std::cout << "mom7=" << get_moment(7) << std::endl;
+//}
 
 double ImageMoments::get_classification(double x1, double y1, double z1, double x2, double y2, double z2) {
     return sqrt(pow(x1 - x2,2) + pow(y1 - y2,2) + pow(y1 - y2,2));
 }
+
 
 
 

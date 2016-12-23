@@ -1,5 +1,7 @@
 #include "ImageProcessing.h"
 
+bool ImageProcessing::debug = false;
+
 void ImageProcessing::lighten(Mat &mat, int amount) {
     switch (mat.channels())  {
         case 1:
@@ -89,8 +91,9 @@ bool sorting(vals i, vals j) { return (i.mean<j.mean); }
 void ImageProcessing::median_filter(Mat& mat, int w_size, int idx) {
     if (w_size > 1 && w_size < mat.cols && w_size < mat.rows &&
             idx > 0 && idx < w_size * w_size) {
-        std::cout << "Applying median filter " << w_size << " x " << w_size
-                  << " with idx = " << idx<< std::endl;
+        if (debug)
+            std::cout << "Applying median filter " << w_size << " x " << w_size
+                      << " with idx = " << idx<< std::endl;
         switch (mat.channels()) {
             case 3: {
                 Mat_<Vec3b> mat3 = mat;
@@ -208,7 +211,8 @@ int largest(int x, int y, int z){
 
 // https://www.cs.rit.edu/~ncs/color/t_convert.html
 Mat ImageProcessing::split_to_hs(Mat& mat) {
-    std::cout << "Splitting input RGB values into HS(without V)..." << std::endl;
+    if (debug)
+        std::cout << "Splitting input RGB values into HS(without V)..." << std::endl;
     Mat_<Vec3b> mat3 = mat;
     Mat_<Vec2f> mat_hs = Mat(mat.rows, mat.cols, CV_32FC2);
     // float matrix, two channels for H and S
@@ -263,19 +267,22 @@ void ImageProcessing::resize(Mat &mat) {
     if (mat.rows > IMAGE_SIZE || mat.cols > IMAGE_SIZE) {
         if (mat.rows > IMAGE_SIZE) {
             s.width = IMAGE_SIZE;
-            std::cout << "Changing width from " << mat.rows << " to " << IMAGE_SIZE << ".\n";
+            if (debug)
+                std::cout << "Changing width from " << mat.rows << " to " << IMAGE_SIZE << ".\n";
         }
         if (mat.cols > IMAGE_SIZE) {
             s.height = IMAGE_SIZE;
-            std::cout << "Changing height to " << mat.cols << " to " << IMAGE_SIZE << ".\n";
+            if (debug)
+                std::cout << "Changing height to " << mat.cols << " to " << IMAGE_SIZE << ".\n";
         }
         cv::resize(mat, mat, s, 0, 0, CV_INTER_AREA);
     }
 }
 
 void ImageProcessing::info(Mat &mat) {
-    std::cout << "Image: " << mat.rows << " x "
-              << mat.cols << ", channels: " << mat.channels();
+    if (debug)
+        std::cout << "Image: " << mat.rows << " x "
+                  << mat.cols << ", channels: " << mat.channels();
     unsigned long mean = 0;
     for (int i = 0; i < mat.rows; ++i) {
         for (int j = 0; j < mat.cols; ++j) {
@@ -283,8 +290,8 @@ void ImageProcessing::info(Mat &mat) {
         }
     }
     mean /= mat.rows * mat.cols;
-    std::cout << ", mean pixel value: " << mean;
-    std::cout << std::endl;
+    if (debug)
+        std::cout << ", mean pixel value: " << mean << std::endl;
 }
 
 // http://stackoverflow.com/questions/8767166/passing-a-2d-array-to-a-c-function
@@ -326,7 +333,8 @@ void filter3_image(Mat &mat, int k_sum, int (&filter)[3][3]) {
 }
 
 void ImageProcessing::filter3(Mat &mat, FilterTypes type) {
-    std::cout << "Filtering with " << getTextForEnum(type) << " filter..."<< std::endl;
+    if (debug)
+        std::cout << "Filtering with " << getTextForEnum(type) << " filter..."<< std::endl;
     switch (type) {
         case LOW_PASS: {
             int k = count_k(filter_lp);
@@ -357,17 +365,15 @@ void ImageProcessing::show_histogram(Mat& mat) {
             m1.at<Vec2b>(i_sat, i_hue)[1] = 255;
             m1.at<Vec2b>(i_sat ,i_hue)[2] = 255;
         }
-        //std::cout << "here2 " << std::endl;
     }
-    std::cout << "here2 " << std::endl;
-    //std::cout << "here: " << (int)m1.at<Vec2b>(0,0)[0];
     imshow( "H-S Histogram", m1);
     waitKey(-1);
 }
 
 void ImageProcessing::segment(Mat hs_mat, Mat& rgb_mat, double h_min, double h_max, double s_min, double s_max) {
-    std::cout << "Segmenting HS image with " << h_min << " < HUE < " << h_max << ", " <<
-            s_min << " < SAT < " << s_max << std::endl;
+    if (debug)
+        std::cout << "Segmenting HS image with " << h_min << " < HUE < " << h_max << ", " <<
+                s_min << " < SAT < " << s_max << std::endl;
     Mat_<Vec2f> mat_hs = hs_mat;
     Mat_<Vec3f> mat_rgb = rgb_mat;
     for (int i = 0; i < mat_hs.rows; ++i) {
@@ -429,15 +435,17 @@ void ImageProcessing::check_local(Mat_<Vec3f>& mat, Mat_<Vec3f>& out_mat, int i,
 }
 
 void ImageProcessing::erosion_dilation(Mat& mat, bool eros, bool box) {
-    if (eros)
-        std::cout << "Applying erosion. ";
-    else
-        std::cout << "Applying dilation. ";
-    if (box)
-        std::cout << "Box 3x3";
-    else
-        std::cout << "Plus sign";
-    std::cout << "...\n";
+    if (debug) {
+        if (eros)
+            std::cout << "Applying erosion. ";
+        else
+            std::cout << "Applying dilation. ";
+        if (box)
+            std::cout << "Box 3x3";
+        else
+            std::cout << "Plus sign";
+        std::cout << "...\n";
+    }
 
     Mat_<Vec3f> mat_bin = mat;
     Mat_<Vec3f> out_mat_bin = Mat(mat.rows,mat.cols,CV_8UC3);
@@ -518,10 +526,12 @@ vector<Bbox> ImageProcessing::get_elements(Mat& mat, int S_min, bool show_first)
     std::sort(els.begin(),els.end(),comp);
 
     if (els.size() > 0) {
-        std::cout << "Max area: " << els[0].S << ", Items count: " << els.size();
-        std::cout << ", Largest element: x_min=" << els[0].x_min << ", y_min=" << els[0].y_min << ", x_max="
-                  << els[0].x_max << ", y_max=" << els[0].y_max << "."
-                  << std::endl;
+        if (debug) {
+            std::cout << "Max area: " << els[0].S << ", Items count: " << els.size();
+            std::cout << ", Largest element: x_min=" << els[0].x_min << ", y_min=" << els[0].y_min << ", x_max="
+                      << els[0].x_max << ", y_max=" << els[0].y_max << "."
+                      << std::endl;
+        }
         if (show_first) {
             imshow("largest segment:" + std::to_string(els[0].S),els[0].box);
         }

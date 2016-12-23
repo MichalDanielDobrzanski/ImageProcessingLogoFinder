@@ -59,6 +59,8 @@ public:
     const static int OBJ = 255;
     const static int BG = 0;
 
+    static bool debug;
+
     // resize
     static void resize(Mat& mat);
 
@@ -95,6 +97,5 @@ public:
 
     // get white elements
     static vector<Bbox> get_elements(Mat& mat, int i, bool show_first);
-
 
 };

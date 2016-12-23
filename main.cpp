@@ -8,6 +8,9 @@ using namespace std;
 const string INPUT_DIR = "input_data";
 const string LOGO_DIR = "logo";
 
+const string LOGO_NAME = "eagle";
+const string TEXT_NAME = "orlen";
+
 int main() {
 
 
@@ -79,13 +82,40 @@ int main() {
 
         //imshow(to_string(i),mat);
 
-        ImageMoments moms(els[0].box);
-        //cout << "mom1=" << moms.get_moment(1) << endl;
-        //cout << "mom3=" << moms.get_moment(3) << endl;
-        //cout << "mom7=" << moms.get_moment(7) << endl;
+        int num = 2;
+        for (int j = 0; j < num; ++j) {
+            ImageMoments moms(els[j].box);
+            double m1 =  moms.get_moment(1);
+            double m3 =  moms.get_moment(3);
+            double m7 =  moms.get_moment(7);
+//        cout << "mom1=" << m1 << endl;
+//        cout << "mom3=" << m3 << endl;
+//        cout << "mom7=" << m7 << endl;
 
-        moms.get_logo_moment(LOGO_DIR);
+            moms.get_logo_moment(LOGO_DIR + "/" + LOGO_NAME);
+            //cout << LOGO_NAME << ":" << endl;
+            double l1 =  moms.get_moment(1);
+            double l3 =  moms.get_moment(3);
+            double l7 =  moms.get_moment(7);
+//        cout << "mom1=" << l1 << endl;
+//        cout << "mom3=" << l3 << endl;
+//        cout << "mom7=" << l7 << endl;
+            double is_logo = moms.get_classification(m1,m3,m7,l1,l3,l7);
 
+            moms.get_logo_moment(LOGO_DIR + "/" + TEXT_NAME);
+            //cout << TEXT_NAME << ":" << endl;
+            double t1 =  moms.get_moment(1);
+            double t3 =  moms.get_moment(3);
+            double t7 =  moms.get_moment(7);
+//        cout << "mom1=" << t1 << endl;
+//        cout << "mom3=" << t3 << endl;
+//        cout << "mom7=" << t7 << endl;
+            double is_text = moms.get_classification(m1,m3,m7,t1,t3,t7);
+
+            double prob = is_logo / (is_logo + is_text) * 100;
+            cout << "There is a logo. " << prob << "% sure." << endl;
+
+        }
 
 
         els.clear();

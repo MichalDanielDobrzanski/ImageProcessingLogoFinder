@@ -59,7 +59,7 @@ void ImageMoments::calc_moments(cv::Mat &mat) {
     M11 = m11 - m10 * m01 / m00;
 
     M20 = m20 - m10 * m10 / m00;
-    M02 = m02 - m01 * m10 / m00;
+    M02 = m02 - m01 * m01 / m00;
 
     M21 = m21 - 2 * m11 * m1000 - m20 * m0100 + 2 * m01 * m1000 * m1000;
     M12 = m12 - 2 * m11 * m0100 - m02 * m1000 + 2 * m10 * m0100 * m0100;
@@ -103,19 +103,20 @@ void ImageMoments::get_logo_moment(string logo_path) {
     // calc moments for logo (split into emblem and text)
     string ext = ".png";
 
-    vector<Mat> mats;
-    mats.push_back(imread(logo_path + "/eagle" + ext));
-    mats.push_back(imread(logo_path + "/orlen" + ext));
+    Mat mat = imread(logo_path + ext);
 
     // rotate, scale, move to get average moments
-    for (int i = 0; i < mats.size(); ++i) {
-        reset_moments();
-        calc_moments(mats[i]);
-        std::cout << "mom1=" << get_moment(1) << std::endl;
-        std::cout << "mom3=" << get_moment(3) << std::endl;
-        std::cout << "mom7=" << get_moment(7) << std::endl;
-    }
-
+    reset_moments();
+    calc_moments(mat);
+    //std::cout << "mom1=" << get_moment(1) << std::endl;
+    //std::cout << "mom3=" << get_moment(3) << std::endl;
+    //std::cout << "mom7=" << get_moment(7) << std::endl;
 }
+
+double ImageMoments::get_classification(double x1, double y1, double z1, double x2, double y2, double z2) {
+    return sqrt(pow(x1 - x2,2) + pow(y1 - y2,2) + pow(y1 - y2,2));
+}
+
+
 
 

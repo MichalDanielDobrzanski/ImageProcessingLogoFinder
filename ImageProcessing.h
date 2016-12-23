@@ -49,6 +49,9 @@ private:
     // 3box false = 'plus' sign box
     static void check_local(Mat_<Vec3f>& mat, Mat_<Vec3f>& out_mat, int i, int j, bool eros, bool box);
 
+    // flood fill algorithm
+    static void flood_fill(Mat_<Vec3f> &mat, Mat_<uchar> &ch, int i, int j, Bbox &b_curr);
+
 public:
     const static int IMAGE_SIZE = 1000;
     const static int HUE_MAX = 360;
@@ -93,6 +96,5 @@ public:
     // get white elements
     static vector<Bbox> get_elements(Mat& mat, int i, bool show_first);
 
-    static void flood_fill(Mat_<Vec3f> &mat, Mat_<uchar> &ch, int i, int j, Bbox &b_curr);
 
 };

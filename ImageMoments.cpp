@@ -1,9 +1,14 @@
 #include "ImageMoments.h"
 
-double ImageMoments::get_moment(cv::Mat& mat, int number) {
-    double mom;
+
+ImageMoments::ImageMoments(Mat& mat) {
+    // calc moments for image
     reset_moments();
     calc_moments(mat);
+}
+
+double ImageMoments::get_moment(int number) {
+    double mom;
     switch (number) {
         case 1:
             mom = (M20 + M02) / pow(m00, 2);
@@ -50,7 +55,7 @@ void ImageMoments::calc_moments(cv::Mat &mat) {
 
     M00 = m00;
     M01 = 0.;
-    M10 - 0.;
+    M10 = 0.;
     M11 = m11 - m10 * m01 / m00;
 
     M20 = m20 - m10 * m10 / m00;
@@ -93,3 +98,24 @@ void ImageMoments::reset_moments() {
     m1000 = 0.;
     m0100 = 0.;
 }
+
+void ImageMoments::get_logo_moment(string logo_path) {
+    // calc moments for logo (split into emblem and text)
+    string ext = ".png";
+
+    vector<Mat> mats;
+    mats.push_back(imread(logo_path + "/eagle" + ext));
+    mats.push_back(imread(logo_path + "/orlen" + ext));
+
+    // rotate, scale, move to get average moments
+    for (int i = 0; i < mats.size(); ++i) {
+        reset_moments();
+        calc_moments(mats[i]);
+        std::cout << "mom1=" << get_moment(1) << std::endl;
+        std::cout << "mom3=" << get_moment(3) << std::endl;
+        std::cout << "mom7=" << get_moment(7) << std::endl;
+    }
+
+}
+
+

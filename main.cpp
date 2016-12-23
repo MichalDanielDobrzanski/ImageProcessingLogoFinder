@@ -6,6 +6,7 @@
 using namespace std;
 
 const string INPUT_DIR = "input_data";
+const string LOGO_DIR = "logo";
 
 int main() {
 
@@ -78,10 +79,13 @@ int main() {
 
         //imshow(to_string(i),mat);
 
-        ImageMoments i_moms;
-        cout << "mom1=" << i_moms.get_moment(els[idx].box,1) << endl;
-        cout << "mom3=" << i_moms.get_moment(els[idx].box,3) << endl;
-        cout << "mom7=" << i_moms.get_moment(els[idx].box,7) << endl;
+        ImageMoments moms(els[0].box);
+        //cout << "mom1=" << moms.get_moment(1) << endl;
+        //cout << "mom3=" << moms.get_moment(3) << endl;
+        //cout << "mom7=" << moms.get_moment(7) << endl;
+
+        moms.get_logo_moment(LOGO_DIR);
+
 
 
         els.clear();

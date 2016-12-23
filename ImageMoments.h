@@ -6,9 +6,12 @@
 
 #include "ImageProcessing.h"
 
+using namespace cv;
+
 class ImageMoments {
 
 private:
+
     double m00 = 0.;
     double m10 = 0.;
     double m01 = 0.;
@@ -39,12 +42,15 @@ private:
 
     void reset_moments();
 
-    void calc_moments(cv::Mat& mat);
+    void calc_moments(Mat& mat);
 
 public:
 
-    // gets "M" moment (M1, M3, M7,...)
-    double get_moment(cv::Mat& mat, int number);
+    ImageMoments(Mat& mat);
 
+    // gets "M" moment (M1, M3, M7,...)
+    double get_moment(int mom);
+
+    void get_logo_moment(string path);
 };
 

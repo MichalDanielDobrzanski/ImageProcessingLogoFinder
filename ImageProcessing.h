@@ -94,4 +94,5 @@ public:
     static vector<Bbox> get_elements(Mat& mat, int i, bool show_first);
 
     static void flood_fill(Mat_<Vec3f> &mat, Mat_<uchar> &ch, int i, int j, Bbox &b_curr);
+
 };

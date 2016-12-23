@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Processing.h"
 #include "ImageProcessing.h"
+#include "ImageMoments.h"
 
 using namespace std;
 
@@ -69,17 +70,24 @@ int main() {
         // get sorted list of objects in a picture
         int minS = 20; // minimal field
         vector<Bbox> els = ImageProcessing::get_elements(mat, minS,false);
-        //int idx = 1;
+        int idx = 0;
         //imwrite("out_data/segmented/" + to_string(i) + "_segm_" + to_string(els[idx].S)
         //        + "_idx_"+ to_string(idx) + ".jpg",els[idx].box),
-
+        //imshow(to_string(idx),els[idx].box);
         //waitKey(-1);
 
         //imshow(to_string(i),mat);
+
+        ImageMoments i_moms;
+        cout << "mom1=" << i_moms.get_moment(els[idx].box,1) << endl;
+        cout << "mom3=" << i_moms.get_moment(els[idx].box,3) << endl;
+        cout << "mom7=" << i_moms.get_moment(els[idx].box,7) << endl;
+
+
         els.clear();
         cout << endl;
     }
-    waitKey(-1);
+    //waitKey(-1);
 
     //printf( "hue: %6.4lf\n", mat.at<Vec2f>(5,5)[0]);
     //printf( "sat: %6.4lf\n", mat.at<Vec2f>(5,5)[1]);

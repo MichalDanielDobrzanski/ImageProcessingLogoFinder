@@ -12,6 +12,113 @@ const string NOISE_DIR = "noise/";
 const string LOGO_NAME = "eagle";
 const string TEXT_NAME = "orlen";
 
+
+struct leastMoms {
+    double ml; // logo parameters
+    int lx;
+    int ly;
+    int lwidth;
+    int lheight;
+
+    double mt; // text parameters
+    int tx;
+    int ty;
+    int twidth;
+    int theight;
+};
+
+leastMoms process_bounding_box(Bbox& bbox, double l1, double l3, double l7, double t1, double t3, double t7) {
+    int width  = bbox.x_max - bbox.x_min;
+    int height = bbox.y_max - bbox.y_min;
+
+    int w_dim = 0; // window dimension
+    double min_window = 0.5;
+    bool dir = false; // 0 = bottom, 1 = right
+    if (width > height) {
+    	w_dim = height;
+    	dir = true;
+    	cout << "Went right. " << endl;
+    	//cout << "w_dim=" << height << " goin right." << endl;
+    } else {
+    	w_dim = width;
+    	//cout << "w_dim=" << width << " goin bottom." << endl;
+    	cout << "Went bottom. " << endl;
+    }
+
+    int minimum_window = (int)(min_window * w_dim);  // minimum size of a window.
+    cout << "Min window: " << minimum_window << endl;
+
+
+    // define starting moments;
+    leastMoms lms;
+    lms.ml = 1;
+    lms.mt = 1;
+
+    int curr_x = 0;
+    int curr_y = 0;
+    
+    int dist_to_go = 0;
+
+    if (dir)
+    	dist_to_go = width - w_dim;
+    else
+    	dist_to_go = height - w_dim;
+
+
+    int step = 0;
+    int w_dim_x = w_dim;
+    int w_dim_y = w_dim; 
+    while (w_dim_x > minimum_window && w_dim_y > minimum_window) { // decrease window size
+    	while (step < dist_to_go) {
+    	    Mat curr_mat = bbox.box(Rect(curr_x,curr_y,w_dim_x,w_dim_y));
+        	ImageMoments im_moms(curr_mat);
+        	double m1 =  im_moms.get_moment(1);
+            double m3 =  im_moms.get_moment(3);
+            double m7 =  im_moms.get_moment(7);
+
+            //cout << "going right: m1=" << m1 << " m3=" << m3 << " m7=" << m7 << endl;
+            double is_logo  = im_moms.get_classification(m1,m3,m7,l1,l3,l7);
+            double is_text  = im_moms.get_classification(m1,m3,m7,t1,t3,t7);
+
+            if (is_logo < lms.ml) {
+            	lms.ml = is_logo;
+            	lms.lx = curr_x;
+            	lms.ly = curr_y;
+            	lms.lwidth = w_dim_x;
+            	lms.lheight = w_dim_y;
+            }
+            if (is_text < lms.mt) {
+            	lms.mt = is_text;
+            	lms.tx = curr_x;
+            	lms.ty = curr_y;
+            	lms.twidth = w_dim_x;
+            	lms.theight = w_dim_y;
+            }
+
+            if (dir)
+            	curr_x++;
+            else
+            	curr_y++;
+    
+            step++;
+        } 
+        if (dir) {
+            w_dim_x--;
+            dist_to_go = width - w_dim_x - minimum_window;
+        } else {
+            w_dim_y--;
+            dist_to_go = height - w_dim_y - minimum_window;
+        }
+        step = 0;
+        curr_x = 0;
+        curr_y = 0;
+    }
+
+    //cout << "least dist object-logo: " << lms.ml << " least dist object-text:" << lms.mt << endl;
+    return lms;
+}
+
+
 int main() {
 
     // HUE-SATURATION segmentation parameters:
@@ -24,7 +131,7 @@ int main() {
     int minS = 20;
 
     // calc moments for logo - 'eagle'
-    int num_logos = 6;
+    int num_logos = 4; // do not include at two pones
     double l1avg = 0.0;
     double l3avg = 0.0;
     double l7avg = 0.0;
@@ -55,6 +162,7 @@ int main() {
     double t7 =  moms.get_moment(7);
 
     // calc mean moments for noise
+    /*
     double n1avg =  0.0;
     double n3avg =  0.0;
     double n7avg =  0.0;
@@ -105,6 +213,7 @@ int main() {
     cout << "mom 1 noise average=" << n1avg << endl;
     cout << "mom 3 noise average=" << n3avg << endl;
     cout << "mom 7 noise average=" << n7avg << endl;
+    */
 
 
     //Processing p(INPUT_DIR);
@@ -177,19 +286,30 @@ int main() {
 
         int num = 2;
         for (int j = 0; j < num; ++j) {
-            ImageMoments im_moms(els[j].box);
-            double m1 =  im_moms.get_moment(1);
-            double m3 =  im_moms.get_moment(3);
-            double m7 =  im_moms.get_moment(7);
+            cout << "Segment: " << j << endl;
 
-            double is_noise = im_moms.get_classification(m1,m3,m7,n1avg,n3avg,n7avg);
-            double is_logo  = im_moms.get_classification(m1,m3,m7,l1avg,l3avg,l7avg);
-            double is_text  = im_moms.get_classification(m1,m3,m7,t1,t3,t7);
+            leastMoms lms = process_bounding_box(els[j],l1avg,l3avg,l7avg,t1,t3,t7);
 
-            double logo = is_logo / (is_logo + is_noise) * 100;
-            cout << "Segment: " << j << ". There is a logo. " << logo << "% sure." << endl;
-            double text = is_text / (is_text + is_noise) * 100;
-            cout << "Segment: " << j << ". There is a text. " << text << "% sure." << endl;
+            //imshow(to_string(j),els[j].box(Rect(lms.lx,lms.ly,lms.lwidth,lms.lheight)));
+            //waitKey(-1);
+
+            // ImageMoments im_moms(els[j].box);
+            // double m1 =  im_moms.get_moment(1);
+            // double m3 =  im_moms.get_moment(3);
+            // double m7 =  im_moms.get_moment(7);
+
+            // //double is_noise = im_moms.get_classification(m1,m3,m7,n1avg,n3avg,n7avg);
+            // double is_logo  = im_moms.get_classification(m1,m3,m7,l1avg,l3avg,l7avg);
+            // double is_text  = im_moms.get_classification(m1,m3,m7,t1,t3,t7);
+
+            cout << "least dist object-logo: " << lms.ml << " least dist object-text:" << lms.mt << endl;
+
+
+
+            //double logo = is_logo / (is_logo + is_noise) * 100;
+            //cout << "Segment: " << j << ". There is a logo. " << logo << "% sure." << endl;
+            //double text = is_text / (is_text + is_noise) * 100;
+            //cout << "Segment: " << j << ". There is a text. " << text << "% sure." << endl;
         }
         els.clear();
         cout << endl;

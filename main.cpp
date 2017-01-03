@@ -32,7 +32,7 @@ leastMoms process_bounding_box(Bbox& bbox, double l1, double l3, double l7, doub
     int height = bbox.y_max - bbox.y_min;
 
     int w_dim = 0; // window dimension
-    double min_window = 0.5;
+    double min_window = 0.3;
     bool dir = false; // 0 = bottom, 1 = right
     if (width > height) {
     	w_dim = height;
@@ -71,10 +71,14 @@ leastMoms process_bounding_box(Bbox& bbox, double l1, double l3, double l7, doub
     while (w_dim_x > minimum_window && w_dim_y > minimum_window) { // decrease window size
     	while (step < dist_to_go) {
     	    Mat curr_mat = bbox.box(Rect(curr_x,curr_y,w_dim_x,w_dim_y));
+
+            //imshow("sdfd",curr_mat);
+            //waitKey(-1);
+
         	ImageMoments im_moms(curr_mat);
-        	double m1 =  im_moms.get_moment(1);
-            double m3 =  im_moms.get_moment(3);
-            double m7 =  im_moms.get_moment(7);
+        	double m1 = im_moms.get_moment(1);
+            double m3 = im_moms.get_moment(3);
+            double m7 = im_moms.get_moment(7);
 
             //cout << "going right: m1=" << m1 << " m3=" << m3 << " m7=" << m7 << endl;
             double is_logo  = im_moms.get_classification(m1,m3,m7,l1,l3,l7);
@@ -131,7 +135,7 @@ int main() {
     int minS = 20;
 
     // calc moments for logo - 'eagle'
-    int num_logos = 4; // do not include at two pones
+    int num_logos = 2; // do not include at two pones
     double l1avg = 0.0;
     double l3avg = 0.0;
     double l7avg = 0.0;
@@ -160,6 +164,11 @@ int main() {
     double t1 =  moms.get_moment(1);
     double t3 =  moms.get_moment(3);
     double t7 =  moms.get_moment(7);
+
+    cout << "mom 1 text=" << t1 << endl;
+    cout << "mom 3 text=" << t3 << endl;
+    cout << "mom 7 text=" << t7 << endl;
+
 
     // calc mean moments for noise
     /*
@@ -290,7 +299,8 @@ int main() {
 
             leastMoms lms = process_bounding_box(els[j],l1avg,l3avg,l7avg,t1,t3,t7);
 
-            //imshow(to_string(j),els[j].box(Rect(lms.lx,lms.ly,lms.lwidth,lms.lheight)));
+            //imshow("Found logo at segment: " + to_string(j),els[j].box(Rect(lms.lx,lms.ly,lms.lwidth,lms.lheight)));
+            //imshow("Found text at segment: " + to_string(j),els[j].box(Rect(lms.tx,lms.ty,lms.twidth,lms.theight)));
             //waitKey(-1);
 
             // ImageMoments im_moms(els[j].box);

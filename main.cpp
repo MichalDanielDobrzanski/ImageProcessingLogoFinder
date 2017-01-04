@@ -27,7 +27,27 @@ struct leastMoms {
     int theight;
 };
 
-leastMoms process_bounding_box(Bbox& bbox, double l1, double l3, double l7, double t1, double t3, double t7) {
+struct LogoMoments {
+
+	double l1avg;
+    double l3avg;
+    double l7avg;
+
+	double l1avg2;
+    double l3avg2;
+    double l7avg2;
+
+    double t1;
+    double t3;
+    double t7;
+
+    double t12;
+    double t32;
+    double t72;
+
+};
+
+leastMoms process_bounding_box(Bbox& bbox, LogoMoments ms) {
     int width  = bbox.x_max - bbox.x_min;
     int height = bbox.y_max - bbox.y_min;
 
@@ -81,20 +101,26 @@ leastMoms process_bounding_box(Bbox& bbox, double l1, double l3, double l7, doub
             double m7 = im_moms.get_moment(7);
 
             //cout << "going right: m1=" << m1 << " m3=" << m3 << " m7=" << m7 << endl;
-            double is_logo  = im_moms.get_classification(m1,m3,m7,l1,l3,l7);
-            double is_text  = im_moms.get_classification(m1,m3,m7,t1,t3,t7);
-
-            if (is_logo < lms.ml) {
-            	lms.ml = is_logo;
-            	lms.lx = curr_x;
-            	lms.ly = curr_y;
+            double is_logo  = im_moms.get_classification(m1,m3,m7,ms.l1avg,ms.l3avg,ms.l7avg);
+            double is_logo2  = im_moms.get_classification(m1,m3,m7,ms.l1avg2,ms.l3avg2,ms.l7avg2);
+            
+            double is_logo_min = is_logo > is_logo2 ? is_logo2 : is_logo;
+            if (is_logo_min < lms.ml) {
+            	lms.ml = is_logo_min;
+            	lms.lx = bbox.x_min + curr_x;
+            	lms.ly = bbox.y_min + curr_y;
             	lms.lwidth = w_dim_x;
             	lms.lheight = w_dim_y;
             }
-            if (is_text < lms.mt) {
-            	lms.mt = is_text;
-            	lms.tx = curr_x;
-            	lms.ty = curr_y;
+
+            double is_text  = im_moms.get_classification(m1,m3,m7,ms.t1,ms.t3,ms.t7);
+            double is_text2  = im_moms.get_classification(m1,m3,m7,ms.t12,ms.t32,ms.t72);
+
+            double is_text_min = is_text > is_text2 ? is_text2 : is_text;
+            if (is_text_min < lms.mt) {
+            	lms.mt = is_text_min;
+            	lms.tx = bbox.x_min + curr_x;
+            	lms.ty = bbox.y_min + curr_y;
             	lms.twidth = w_dim_x;
             	lms.theight = w_dim_y;
             }
@@ -135,6 +161,7 @@ int main() {
     int minS = 20;
 
     // calc moments for logo - 'eagle'
+    LogoMoments moments;
     int num_logos = 2; // do not include at two pones
     double l1avg = 0.0;
     double l3avg = 0.0;
@@ -157,6 +184,35 @@ int main() {
     cout << "mom 1 logo average=" << l1avg << endl;
     cout << "mom 3 logo average=" << l3avg << endl;
     cout << "mom 7 logo average=" << l7avg << endl;
+    moments.l1avg = l1avg;
+    moments.l3avg = l3avg;
+    moments.l7avg = l7avg;
+
+    // calc moments for logo - 'eagle'
+    double l1avg2 = 0.0;
+    double l3avg2 = 0.0;
+    double l7avg2 = 0.0;
+    for (int l = 2; l < 4; ++l) {
+        ImageMoments moms(LOGO_DIR + LOGO_NAME + "_" + to_string(l + 1));
+        double l12 =  moms.get_moment(1);
+        double l32 =  moms.get_moment(3);
+        double l72 =  moms.get_moment(7);
+//        cout << to_string(l + 1) << ": mom 1 logo =" << l1 << endl;
+//        cout << to_string(l + 1) << ": mom 3 logo =" << l3 << endl;
+//        cout << to_string(l + 1) << ": mom 7 logo =" << l7 << endl;
+        l1avg2 += l12;
+        l3avg2 += l32;
+        l7avg2 += l72;
+    }
+    l1avg2 /= 2;
+    l3avg2 /= 2;
+    l7avg2 /= 2;
+    cout << "mom2 1 logo average=" << l1avg2 << endl;
+    cout << "mom2 3 logo average=" << l3avg2 << endl;
+    cout << "mom2 7 logo average=" << l7avg2 << endl;
+    moments.l1avg2 = l1avg2;
+    moments.l3avg2 = l3avg2;
+    moments.l7avg2 = l7avg2;
 
 
     // calc moments for text - 'orlen'
@@ -168,6 +224,22 @@ int main() {
     cout << "mom 1 text=" << t1 << endl;
     cout << "mom 3 text=" << t3 << endl;
     cout << "mom 7 text=" << t7 << endl;
+    moments.t1 = t1;
+    moments.t3 = t3;
+    moments.t7 = t7;
+
+    moms = ImageMoments(LOGO_DIR + TEXT_NAME + "_2");
+    double t12 =  moms.get_moment(1);
+    double t32 =  moms.get_moment(3);
+    double t72 =  moms.get_moment(7);
+
+    cout << "mom2 1 text=" << t12 << endl;
+    cout << "mom2 3 text=" << t32 << endl;
+    cout << "mom2 7 text=" << t72 << endl;
+    moments.t12 = t12;
+    moments.t32 = t32;
+    moments.t72 = t72;
+
 
 
     // calc mean moments for noise
@@ -293,11 +365,18 @@ int main() {
 
         //imshow(to_string(i),mat);
 
-        int num = 2;
+        double logo_thr = 0.00016;
+        double text_thr = 0.2;
+        int num = 3;
+
+
+        Mat mat_found = imread(INPUT_DIR + to_string(i) + ".jpg");
+        ImageProcessing::resize(mat_found);
+
         for (int j = 0; j < num; ++j) {
             cout << "Segment: " << j << endl;
 
-            leastMoms lms = process_bounding_box(els[j],l1avg,l3avg,l7avg,t1,t3,t7);
+            leastMoms lms = process_bounding_box(els[j],moments);
 
             //imshow("Found logo at segment: " + to_string(j),els[j].box(Rect(lms.lx,lms.ly,lms.lwidth,lms.lheight)));
             //imshow("Found text at segment: " + to_string(j),els[j].box(Rect(lms.tx,lms.ty,lms.twidth,lms.theight)));
@@ -311,8 +390,22 @@ int main() {
             // //double is_noise = im_moms.get_classification(m1,m3,m7,n1avg,n3avg,n7avg);
             // double is_logo  = im_moms.get_classification(m1,m3,m7,l1avg,l3avg,l7avg);
             // double is_text  = im_moms.get_classification(m1,m3,m7,t1,t3,t7);
-
             cout << "least dist object-logo: " << lms.ml << " least dist object-text:" << lms.mt << endl;
+
+            if (lms.ml <= logo_thr) {
+            	cout << "Found logo." << endl;
+            	rectangle(mat_found, Point(lms.lx, lms.ly), Point(lms.lx + lms.lwidth, lms.ly + lms.lheight), 
+            		0, 2, 8, 0);
+            }
+
+            if (lms.mt <= text_thr) {
+            	cout << "Found text." << endl;
+            	rectangle(mat_found, Point(lms.tx, lms.ty), Point(lms.tx + lms.twidth, lms.ty + lms.theight), 
+            		128, 2, 8, 0);
+            }
+
+
+            // imwrite("out_data/recognized/" + "image_" + to_string(i) + "_" + to_string(els[idx].S)
 
 
 
@@ -321,6 +414,10 @@ int main() {
             //double text = is_text / (is_text + is_noise) * 100;
             //cout << "Segment: " << j << ". There is a text. " << text << "% sure." << endl;
         }
+
+        imwrite("out_data/recognized/image_" + to_string(i) + ".jpg", mat_found);
+
+
         els.clear();
         cout << endl;
     }

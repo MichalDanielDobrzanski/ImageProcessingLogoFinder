@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include "Processing.h"
 #include "ImageProcessing.h"
 #include "ImageMoments.h"
@@ -29,13 +30,17 @@ struct leastMoms {
 
 struct LogoMoments {
 
-	double l1avg;
-    double l3avg;
-    double l7avg;
+	double l1;
+    double l3;
+    double l7;
 
-	double l1avg2;
-    double l3avg2;
-    double l7avg2;
+    double l12;
+    double l32;
+    double l72;
+
+	double l13;
+    double l33;
+    double l73;
 
     double t1;
     double t3;
@@ -47,12 +52,16 @@ struct LogoMoments {
 
 };
 
+double minimum(double x, double x2, double x3) {
+    return min({x, x2, x3});
+}
+
 leastMoms process_bounding_box(Bbox& bbox, LogoMoments ms) {
     int width  = bbox.x_max - bbox.x_min;
     int height = bbox.y_max - bbox.y_min;
 
     int w_dim = 0; // window dimension
-    double min_window = 0.3;
+    double min_window = 0.4;
     bool dir = false; // 0 = bottom, 1 = right
     if (width > height) {
     	w_dim = height;
@@ -101,10 +110,12 @@ leastMoms process_bounding_box(Bbox& bbox, LogoMoments ms) {
             double m7 = im_moms.get_moment(7);
 
             //cout << "going right: m1=" << m1 << " m3=" << m3 << " m7=" << m7 << endl;
-            double is_logo  = im_moms.get_classification(m1,m3,m7,ms.l1avg,ms.l3avg,ms.l7avg);
-            double is_logo2  = im_moms.get_classification(m1,m3,m7,ms.l1avg2,ms.l3avg2,ms.l7avg2);
+            double is_logo  = im_moms.get_classification(m1,m3,m7,ms.l1,ms.l3,ms.l7);
+            double is_logo2  = im_moms.get_classification(m1,m3,m7,ms.l12,ms.l32,ms.l72);
+            double is_logo3  = im_moms.get_classification(m1,m3,m7,ms.l13,ms.l33,ms.l73);
             
-            double is_logo_min = is_logo > is_logo2 ? is_logo2 : is_logo;
+            double is_logo_min = minimum(is_logo, is_logo2, is_logo3);
+            //double is_logo_min = min(is_logo, is_logo2);
             if (is_logo_min < lms.ml) {
             	lms.ml = is_logo_min;
             	lms.lx = bbox.x_min + curr_x;
@@ -116,7 +127,7 @@ leastMoms process_bounding_box(Bbox& bbox, LogoMoments ms) {
             double is_text  = im_moms.get_classification(m1,m3,m7,ms.t1,ms.t3,ms.t7);
             double is_text2  = im_moms.get_classification(m1,m3,m7,ms.t12,ms.t32,ms.t72);
 
-            double is_text_min = is_text > is_text2 ? is_text2 : is_text;
+            double is_text_min = min(is_text,is_text2);
             if (is_text_min < lms.mt) {
             	lms.mt = is_text_min;
             	lms.tx = bbox.x_min + curr_x;
@@ -148,7 +159,6 @@ leastMoms process_bounding_box(Bbox& bbox, LogoMoments ms) {
     return lms;
 }
 
-
 int main() {
 
     // HUE-SATURATION segmentation parameters:
@@ -158,87 +168,56 @@ int main() {
     double sat_max = 1.0;
 
     // minimal field of a segmented object
-    int minS = 20;
+    int minS = 50;
 
-    // calc moments for logo - 'eagle'
     LogoMoments moments;
-    int num_logos = 2; // do not include at two pones
-    double l1avg = 0.0;
-    double l3avg = 0.0;
-    double l7avg = 0.0;
-    for (int l = 0; l < num_logos; ++l) {
-        ImageMoments moms(LOGO_DIR + LOGO_NAME + "_" + to_string(l + 1));
-        double l1 =  moms.get_moment(1);
-        double l3 =  moms.get_moment(3);
-        double l7 =  moms.get_moment(7);
-//        cout << to_string(l + 1) << ": mom 1 logo =" << l1 << endl;
-//        cout << to_string(l + 1) << ": mom 3 logo =" << l3 << endl;
-//        cout << to_string(l + 1) << ": mom 7 logo =" << l7 << endl;
-        l1avg += l1;
-        l3avg += l3;
-        l7avg += l7;
-    }
-    l1avg /= num_logos;
-    l3avg /= num_logos;
-    l7avg /= num_logos;
-    cout << "mom 1 logo average=" << l1avg << endl;
-    cout << "mom 3 logo average=" << l3avg << endl;
-    cout << "mom 7 logo average=" << l7avg << endl;
-    moments.l1avg = l1avg;
-    moments.l3avg = l3avg;
-    moments.l7avg = l7avg;
+    // calc moments for logo - 'eagle_1'
+    ImageMoments moms(LOGO_DIR + LOGO_NAME + "_1");
+    // calc moments for logo - 'eagle_2'
+    ImageMoments moms2(LOGO_DIR + LOGO_NAME + "_2");
+    // calc moments for logo - 'eagle_3'
+    ImageMoments moms3(LOGO_DIR + LOGO_NAME + "_2_5");
 
-    // calc moments for logo - 'eagle'
-    double l1avg2 = 0.0;
-    double l3avg2 = 0.0;
-    double l7avg2 = 0.0;
-    for (int l = 2; l < 4; ++l) {
-        ImageMoments moms(LOGO_DIR + LOGO_NAME + "_" + to_string(l + 1));
-        double l12 =  moms.get_moment(1);
-        double l32 =  moms.get_moment(3);
-        double l72 =  moms.get_moment(7);
-//        cout << to_string(l + 1) << ": mom 1 logo =" << l1 << endl;
-//        cout << to_string(l + 1) << ": mom 3 logo =" << l3 << endl;
-//        cout << to_string(l + 1) << ": mom 7 logo =" << l7 << endl;
-        l1avg2 += l12;
-        l3avg2 += l32;
-        l7avg2 += l72;
-    }
-    l1avg2 /= 2;
-    l3avg2 /= 2;
-    l7avg2 /= 2;
-    cout << "mom2 1 logo average=" << l1avg2 << endl;
-    cout << "mom2 3 logo average=" << l3avg2 << endl;
-    cout << "mom2 7 logo average=" << l7avg2 << endl;
-    moments.l1avg2 = l1avg2;
-    moments.l3avg2 = l3avg2;
-    moments.l7avg2 = l7avg2;
+    //moments.l1 = moms.get_moment(1);
+    //moments.l3 = moms.get_moment(3);
+    //moments.l7 = moms.get_moment(7);
 
+
+    //moments.l12 = (moms.get_moment(1) + moms2.get_moment(1) + moms3.get_moment(1)) / 3;
+    //moments.l32 = (moms.get_moment(3) + moms2.get_moment(3) + moms3.get_moment(1)) / 3;
+    //moments.l72 = (moms.get_moment(7) + moms2.get_moment(7) + moms3.get_moment(1)) / 3;
+
+    moments.l1 = moms.get_moment(1);
+    moments.l3 = moms.get_moment(3);
+    moments.l7 = moms.get_moment(7);
+
+    moments.l12 = (moms.get_moment(1) + moms2.get_moment(1)) / 2;
+    moments.l32 = (moms.get_moment(3) + moms2.get_moment(3)) / 2;
+    moments.l72 = (moms.get_moment(7) + moms2.get_moment(7)) / 2;
+
+    moments.l13 = moms3.get_moment(1);
+    moments.l33 = moms3.get_moment(3);
+    moments.l73 = moms3.get_moment(7);
 
     // calc moments for text - 'orlen'
-    ImageMoments moms = ImageMoments(LOGO_DIR + TEXT_NAME);
-    double t1 =  moms.get_moment(1);
-    double t3 =  moms.get_moment(3);
-    double t7 =  moms.get_moment(7);
-
-    cout << "mom 1 text=" << t1 << endl;
-    cout << "mom 3 text=" << t3 << endl;
-    cout << "mom 7 text=" << t7 << endl;
+    ImageMoments tmoms(LOGO_DIR + TEXT_NAME);
+    double t1 =  tmoms.get_moment(1);
+    double t3 =  tmoms.get_moment(3);
+    double t7 =  tmoms.get_moment(7);
     moments.t1 = t1;
     moments.t3 = t3;
     moments.t7 = t7;
 
-    moms = ImageMoments(LOGO_DIR + TEXT_NAME + "_2");
-    double t12 =  moms.get_moment(1);
-    double t32 =  moms.get_moment(3);
-    double t72 =  moms.get_moment(7);
-
-    cout << "mom2 1 text=" << t12 << endl;
-    cout << "mom2 3 text=" << t32 << endl;
-    cout << "mom2 7 text=" << t72 << endl;
+    // calc moments for text - 'orlen_2'
+    ImageMoments tmoms2(LOGO_DIR + TEXT_NAME + "_2");
+    double t12 =  tmoms2.get_moment(1);
+    double t32 =  tmoms2.get_moment(3);
+    double t72 =  tmoms2.get_moment(7);
     moments.t12 = t12;
     moments.t32 = t32;
     moments.t72 = t72;
+
+    // najelpiej (orlen.png i orlen_2_3.png)
 
 
 
@@ -365,10 +344,10 @@ int main() {
 
         //imshow(to_string(i),mat);
 
-        double logo_thr = 0.00016;
+        double logo_thr = 0.007;
         double text_thr = 0.2;
-        int num = 3;
-
+        //double text_thr_min = 0.08;
+        int num = 3; // how many segments are considered
 
         Mat mat_found = imread(INPUT_DIR + to_string(i) + ".jpg");
         ImageProcessing::resize(mat_found);
@@ -396,9 +375,11 @@ int main() {
             	cout << "Found logo." << endl;
             	rectangle(mat_found, Point(lms.lx, lms.ly), Point(lms.lx + lms.lwidth, lms.ly + lms.lheight), 
             		0, 2, 8, 0);
+                //imshow("found logo",mat_found(Rect(lms.lx, lms.ly, lms.lwidth, lms.lheight)));
+                //waitKey(-1);
             }
 
-            if (lms.mt <= text_thr) {
+            if (lms.mt <= text_thr /* && lms.mt >= text_thr_min*/) {
             	cout << "Found text." << endl;
             	rectangle(mat_found, Point(lms.tx, lms.ty), Point(lms.tx + lms.twidth, lms.ty + lms.theight), 
             		128, 2, 8, 0);

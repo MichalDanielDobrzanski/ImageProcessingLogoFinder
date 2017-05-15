@@ -57,6 +57,8 @@ Image.h
 /home/dobi/Dropbox/INFORMATKA/sem4/POBR/projekt/projekt_clion/main.cpp
 iostream
 -
+cmath
+-
 Processing.h
 /home/dobi/Dropbox/INFORMATKA/sem4/POBR/projekt/projekt_clion/Processing.h
 ImageProcessing.h
